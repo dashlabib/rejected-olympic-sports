@@ -29,12 +29,21 @@ def main() -> int:
     if not ENTRY.strip():
         print("entry is only white space", file=sys.stderr)
         return 1
+    if "\n" in ENTRY or "\r" in ENTRY:
+        print("entry must be a single line", file=sys.stderr)
+        return 1
     output_dir = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
     os.makedirs(output_dir, exist_ok=True)
     path = os.path.join(output_dir, "entry.txt")
     # Write exactly the line, no trailing newline: the file is the entry.
     with open(path, "w", encoding="utf-8", newline="\n") as handle:
         handle.write(ENTRY)
+    # Read back and confirm the file holds exactly the entry: a silent
+    # short write must never reach the judge as a different text.
+    with open(path, "rb") as handle:
+        if handle.read() != ENTRY.encode("utf-8"):
+            print("written entry does not match", file=sys.stderr)
+            return 1
     print(ENTRY)
     return 0
 
